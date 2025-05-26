@@ -10,7 +10,10 @@ type DataPoint =
       EffectSize: float
       StdError: float }
 
-type DataPointCollection = { mutable Items: DataPoint array }
+type DataPointCollection =
+    { mutable Items: DataPoint array }
+
+    static member Default = { Items = Array.empty<DataPoint> }
 
 type RawData =
     { ExpName: string
@@ -64,12 +67,7 @@ let resultHandler (collection: DataPointCollection) : HttpHandler =
 
 [<EntryPoint>]
 let main args =
-    let mutable datapoints =
-        { Items =
-            [| { Id = Guid.NewGuid()
-                 ExpName = "test"
-                 EffectSize = 0.0
-                 StdError = 1.0 } |] }
+    let mutable datapoints = DataPointCollection.Default
 
     let endpoints =
         [ get "/" (getHandler datapoints)
