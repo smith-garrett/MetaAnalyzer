@@ -10,64 +10,64 @@ type DataPoint =
       EffectSize: float
       StdError: float }
 
-type DataPointCollection =
-    { mutable Items: DataPoint array }
-
-    static member Default = { Items = Array.empty<DataPoint> }
-
 type RawData =
     { ExpName: string
       EffectSize: float
       StdError: float }
 
-let addItem (collection: DataPointCollection) (rawData: RawData) =
-    let guid = Guid.NewGuid()
+type DataPointCollection =
+    { mutable Datapoints: DataPoint list }
 
-    let newItem =
-        { Id = guid
-          ExpName = rawData.ExpName
-          EffectSize = rawData.EffectSize
-          StdError = rawData.StdError }
+    static member Default = { Datapoints = List.empty<DataPoint> }
 
-    // collection.Items <- newItem :: collection.Items
-    collection.Items <- Array.append collection.Items [| newItem |]
+    member this.addItem(rawData: RawData) =
+        let guid = Guid.NewGuid()
 
-let postHandler (collection: DataPointCollection) : HttpHandler =
+        let newItem =
+            { Id = guid
+              ExpName = rawData.ExpName
+              EffectSize = rawData.EffectSize
+              StdError = rawData.StdError }
+
+        this.Datapoints <- List.append this.Datapoints [ newItem ]
+
+let postHandler (datapoints: DataPointCollection) : HttpHandler =
     fun ctx ->
         task {
             let! newData = Request.getJson<RawData> ctx
-            addItem collection newData
-            return Response.ofJson collection ctx
+            datapoints.addItem newData
+            return Response.ofJson datapoints ctx
         }
 
-let getHandler (collection: DataPointCollection) : HttpHandler =
-    fun ctx -> task { return Response.ofPlainText (collection.ToString()) ctx }
+let getHandler datapoints : HttpHandler =
+    fun ctx -> task { return Response.ofPlainText (datapoints.ToString()) ctx }
 
 
 type MetaAnalyticEstimate = { Mean: float }
 
 let doMetaAnalysis (datapoints: DataPointCollection) : MetaAnalyticEstimate =
-    let effectsizes = datapoints.Items |> Array.map (fun x -> x.EffectSize)
+    let effectsizes = datapoints.Datapoints |> List.map (fun x -> x.EffectSize)
 
     let weights =
-        datapoints.Items
-        |> Array.map (fun datapoint -> 1.0 / (datapoint.StdError ** 2.0))
+        datapoints.Datapoints
+        |> List.map (fun datapoint -> 1.0 / datapoint.StdError ** 2.0)
 
     let weightedSum =
-        Array.zip effectsizes weights |> Array.map (fun (m, w) -> m * w) |> Array.sum
+        List.zip effectsizes weights |> List.map (fun (m, w) -> m * w) |> List.sum
 
-    { Mean = weightedSum / (Array.sum weights) }
+    { Mean = weightedSum / List.sum weights }
 
-let resultHandler (collection: DataPointCollection) : HttpHandler =
+let resultHandler (datapoints: DataPointCollection) : HttpHandler =
     fun ctx ->
         task {
-            let res = doMetaAnalysis collection
+            let res = doMetaAnalysis datapoints
             return Response.ofPlainText $"The meta-analytic estimate is: {res.Mean}" ctx
         }
 
 [<EntryPoint>]
 let main args =
-    let mutable datapoints = DataPointCollection.Default
+    // let mutable datapoints = List.empty<DataPoint>
+    let datapoints = DataPointCollection.Default
 
     let endpoints =
         [ get "/" (getHandler datapoints)
