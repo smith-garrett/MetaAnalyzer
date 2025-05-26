@@ -16,9 +16,9 @@ type RawData =
       StdError: float }
 
 type DataPointCollection =
-    { mutable Datapoints: DataPoint list }
+    { mutable DataPoints: DataPoint list }
 
-    static member Default = { Datapoints = List.empty<DataPoint> }
+    static member Default = { DataPoints = List.empty<DataPoint> }
 
     member this.addItem(rawData: RawData) =
         let guid = Guid.NewGuid()
@@ -29,7 +29,9 @@ type DataPointCollection =
               EffectSize = rawData.EffectSize
               StdError = rawData.StdError }
 
-        this.Datapoints <- List.append this.Datapoints [ newItem ]
+        this.DataPoints <- List.append this.DataPoints [ newItem ]
+
+type MetaAnalyticEstimate = { Mean: float }
 
 let postHandler (datapoints: DataPointCollection) : HttpHandler =
     fun ctx ->
@@ -42,14 +44,11 @@ let postHandler (datapoints: DataPointCollection) : HttpHandler =
 let getHandler datapoints : HttpHandler =
     fun ctx -> task { return Response.ofPlainText (datapoints.ToString()) ctx }
 
-
-type MetaAnalyticEstimate = { Mean: float }
-
 let doMetaAnalysis (datapoints: DataPointCollection) : MetaAnalyticEstimate =
-    let effectsizes = datapoints.Datapoints |> List.map (fun x -> x.EffectSize)
+    let effectsizes = datapoints.DataPoints |> List.map (fun x -> x.EffectSize)
 
     let weights =
-        datapoints.Datapoints
+        datapoints.DataPoints
         |> List.map (fun datapoint -> 1.0 / datapoint.StdError ** 2.0)
 
     let weightedSum =
@@ -66,7 +65,6 @@ let resultHandler (datapoints: DataPointCollection) : HttpHandler =
 
 [<EntryPoint>]
 let main args =
-    // let mutable datapoints = List.empty<DataPoint>
     let datapoints = DataPointCollection.Default
 
     let endpoints =
