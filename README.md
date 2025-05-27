@@ -10,9 +10,9 @@ The format expected by the API is an HTTP POST-request to "/create" with the fol
 
 ```json
 {
-  "ExpName": string
-  "EffectSize": float
-  "StdError": float
+  "ExpName": "my-favorite-experiment"
+  "EffectSize": 10.0
+  "StdError": 0.5
 }
 ```
 
