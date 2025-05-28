@@ -1,5 +1,7 @@
 # WIP: A web API for automatically generating meta-analyses from uploaded data
 
+[![.NET](https://github.com/smith-garrett/MetaAnalyzer/actions/workflows/dotnet.yml/badge.svg)](https://github.com/smith-garrett/MetaAnalyzer/actions/workflows/dotnet.yml)
+
 After carrying out a series of experiments, it is common in research to carry out a meta-analysis of all of the results. A meta-analysis is a quantitive summary of a series of effect size estimates, effectively a weighted average.
 
 This project is meant to a) provide a simple web API for uploading experiment results and providing a simple meta-analysis and b) give me an opportunity to practice web programming in F#.
