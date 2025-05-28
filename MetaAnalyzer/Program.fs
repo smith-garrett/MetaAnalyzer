@@ -2,7 +2,7 @@ open System
 open Falco
 open Falco.Routing
 open Microsoft.AspNetCore.Builder
-open MetaAnalyzer.MetaAnalyzer
+open MetaAnalyzer
 
 
 [<EntryPoint>]

@@ -3,7 +3,7 @@
 open System
 open Xunit
 
-open MetaAnalyzer.MetaAnalyzer
+open MetaAnalyzer
 
 // [<Fact>]
 // let ``My test`` () = Assert.True(true)
