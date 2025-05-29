@@ -5,9 +5,6 @@ open Xunit
 
 open MetaAnalyzer
 
-// [<Fact>]
-// let ``My test`` () = Assert.True(true)
-
 
 [<Fact>]
 let ``The meta-analytic result of a single effect size should equal the effect size`` () =
@@ -19,7 +16,10 @@ let ``The meta-analytic result of a single effect size should equal the effect s
           StdError = 1.0 }
 
     let est = doMetaAnalysis datapoints
-    Assert.Equal(datapoints.DataPoints[0].EffectSize, est.Mean)
+
+    let value = datapoints.DataPoints.ToArray() |> fun x -> x[0].EffectSize
+
+    Assert.Equal(value, est.Mean)
 
 [<Fact>]
 let ``The meta-analytic estimate of 10 and 12 with equal std. errors should be 11`` () =

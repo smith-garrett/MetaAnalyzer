@@ -2,6 +2,7 @@ module MetaAnalyzer
 
 
 open System
+open System.Collections.Concurrent
 open Falco
 open Falco.Routing
 open Microsoft.AspNetCore.Builder
@@ -19,9 +20,9 @@ type RawData =
       StdError: float }
 
 type DataPointCollection =
-    { mutable DataPoints: DataPoint list }
+    { DataPoints: ConcurrentBag<DataPoint> }
 
-    static member Default = { DataPoints = List.empty<DataPoint> }
+    static member Default = { DataPoints = ConcurrentBag<DataPoint>() }
 
     member this.addItem(rawData: RawData) =
         let guid = Guid.NewGuid()
@@ -32,7 +33,7 @@ type DataPointCollection =
               EffectSize = rawData.EffectSize
               StdError = rawData.StdError }
 
-        this.DataPoints <- List.append this.DataPoints [ newItem ]
+        this.DataPoints.Add newItem
 
 type MetaAnalyticEstimate = { Mean: float }
 
@@ -45,19 +46,19 @@ let postHandler (datapoints: DataPointCollection) : HttpHandler =
         }
 
 let getHandler datapoints : HttpHandler =
-    fun ctx -> task { return Response.ofPlainText (datapoints.ToString()) ctx }
+    fun ctx -> task { return Response.ofJson datapoints ctx }
 
 let doMetaAnalysis (datapoints: DataPointCollection) : MetaAnalyticEstimate =
-    let effectsizes = datapoints.DataPoints |> List.map (fun x -> x.EffectSize)
+    let effectsizes = datapoints.DataPoints |> Seq.map (fun x -> x.EffectSize)
 
     let weights =
         datapoints.DataPoints
-        |> List.map (fun datapoint -> 1.0 / datapoint.StdError ** 2.0)
+        |> Seq.map (fun datapoint -> 1.0 / datapoint.StdError ** 2.0)
 
     let weightedSum =
-        List.zip effectsizes weights |> List.map (fun (m, w) -> m * w) |> List.sum
+        Seq.zip effectsizes weights |> Seq.map (fun (m, w) -> m * w) |> Seq.sum
 
-    { Mean = weightedSum / List.sum weights }
+    { Mean = weightedSum / Seq.sum weights }
 
 let resultHandler (datapoints: DataPointCollection) : HttpHandler =
     fun ctx ->
